@@ -4,16 +4,14 @@
 // 定数の定義
 const int WIDTH = 1200, HEIGHT = 720; // ウィンドウの幅と高さのピクセル数
 const int FPS = 60; // フレームレート
-const int IMG_ENEMY_MAX = 5; // 敵の画像の枚数（種類）
-const int BULLET_MAX = 100;
-const int ENEMY_MAX = 100; // 敵機の数の最大値
+const int IMG_BADFOOD_MAX = 9; // ダメな食べ物の画像の枚数（種類）
+const int BADFOOD_MAX = 1000; // ダメな食べ物の数の最大値
+const int IMG_GOODFOOD_TYPE = 7; // 良い食べ物の種類
+const int GOODFOOD_MAX = 1000; // 良い食べ物の最大数
+const int ATTACK_MAX = 1000;
 const int STAGE_DISTANCE = FPS * 60; // ステージの長さ
-const int ITEM_TYPE = 3; // アイテムの種類
-const int ITEM_MAX = 1000; // アイテムの最大数
-const int WEAPON_LV_MAX = 10; // 武器レベルの最大値
-const int PLAYER_SPEED_MAX = 20; // 自機の速さの最大値
-enum { ONION, CHOCOLATE, GRAPE, COFFEE, BEER, AVOCADO, RAW_FISH, MILK, DOG_FOOD }; // 敵機の種類
-enum { , ENE_ZAKO1, ENE_ZAKO2, ENE_ZAKO3, ENE_BOSS }; // 敵機の種類
+enum { ONION, CHOCOLATE, GRAPE, COFFEE, BEER, AVOCADO, RAW_FISH, MILK, DOG_FOOD }; // ダメな食べ物の種類
+enum { COOKED_FISH, PASTE_VEGETABLES, APPLE, WATERMELON, BANANA, CAT_FOOD, CAT_MILK }; // 良い食べ物の種類
 enum { TITLE, PLAY, OVER, CLEAR }; // シーンを分けるための列挙定数
 
 // グローバル変数
@@ -22,19 +20,18 @@ struct OBJECT player; // 自機用の構造体変数
 // ここでゲームに用いる変数や配列を定義する
 int imgStage;
 int imgCat; // 自機の画像
-//int imgEnemy[IMG_ENEMY_MAX]; // 敵機の画像
-//int imgExprosion; // 爆発演出の画像
-//int imgItem; // アイテムの画像
+int imgBAD[BADFOOD_MAX]; // 敵機の画像
+int imgGOOD[GOODFOOD_MAX]; // アイテムの画像
 //int bgm, jinOver, jinClear, seExpl, seItem, seShot; // 音の読み込み用
-//int distance = 0; // ステージ終端までの距離
+int distance = 0; // ステージ終端までの距離
 //int bossIdx = 0;
 //int stage = 1; // ステージ
-//int score = 0; // スコア
-//int hisco = 10000; // ハイスコア
-//int noDamageFrame = 0; // 無敵状態
-//int weaponLv = 1; // 自機の武器のレベル（同時に発射される弾数）
-//int scene = TITLE; // シーンを管理
-//int timer = 0; // 時間の進行を管理
+int score = 0; // スコア
+int hisco = 10000; // ハイスコア
+int noDamageFrame = 0; // 無敵状態
+int weaponLv = 1; // 自機の武器のレベル（同時に発射される弾数）
+int scene = TITLE; // シーンを管理
+int timer = 0; // 時間の進行を管理
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
