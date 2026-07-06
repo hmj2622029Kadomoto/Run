@@ -25,14 +25,15 @@ void DrawImage(int img, int x, int y);
 void MovePlayer(void);
 void SetAttack(void);
 void MoveAttack(void);
-int SetEnemy(int x, int y, int vx, int vy, int ptn, int img, int sld);
-void MoveEnemy(void);
+int SetBadFood(int x, int y, int vx, int vy, int ptn, int img, int hp);
+int SetGoodFood(int x, int y, int vx, int vy, int ptn, int img, int hp);
+void MoveBadFood(void);
+void MoveGoodFood(void);
 void StageMap(void);
-void DamageEnemy(int n, int dmg);
+void DamageBadFood(int n, int dmg);
+void DamageGoodFood(int n, int dmg);
 void DrawText(int x, int y, const char* txt, int val, int col, int siz);
 void DrawParameter(void);
-void SetItem(void);
-void MoveItem(void);
 void DrawTextC(int x, int y, const char* txt, int col, int siz);
 
 
