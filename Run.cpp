@@ -327,9 +327,7 @@ void MoveBadFood(void)
 				}
 				if (BadFood[i].pattern == COFFEE) {
 					player.hp -= 10;
-					player.vy -= 1;
-					if (player.vy < 1)
-						player.vy = 1;
+					SetDrawBlendMode(DX_BLENDMODE_ADD, 5);
 				}
 				DamageBadFood(i, 1);
 			}
