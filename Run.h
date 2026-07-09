@@ -31,6 +31,8 @@ void MoveBadFood(void);
 void MoveGoodFood(void);
 int SetDog(int x, int y, int vx, int vy, int ptn, int img, int hp);
 void MoveDog(void);
+int SetHome(int x, int y, int vx, int vy, int img);
+void MoveHome(void);
 void StageMap(void);
 void DamageBadFood(int n, int dmg);
 void DamageGoodFood(int n, int dmg);

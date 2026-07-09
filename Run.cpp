@@ -12,7 +12,7 @@ const int IMG_GOODFOOD_TYPE = 7; // 良い食べ物の種類
 const int GOODFOOD_MAX = 1000; // 良い食べ物の最大数
 const int DOG_MAX = 1000;
 const int ATTACK_MAX = 1000;
-const int STAGE_DISTANCE = FPS * 60; // ステージの長さ
+const int STAGE_DISTANCE = FPS * 420; // ステージの長さ
 const int PLAYER_HP_MAX = 1000;
 enum { ONION, CHOCOLATE, GRAPE, COFFEE, BEER, AVOCADO, RAW_FISH, MILK, DOG_FOOD,	BADFOOD_KINDNUM }; // ダメな食べ物の種類
 enum { COOKED_FISH, VEGETABLES, APPLE, WATERMELON, BANANA, CAT_FOOD, CAT_MILK,	GOODFOOD_KINDNUM }; // 良い食べ物の種類
@@ -25,11 +25,13 @@ struct OBJECT attack[ATTACK_MAX]; // 攻撃用の構造体変数
 struct OBJECT BadFood[BADFOOD_MAX];
 struct OBJECT GoodFood[GOODFOOD_MAX];
 struct OBJECT Dog[DOG_MAX];
+struct OBJECT house;
 
 // ここでゲームに用いる変数や配列を定義する
 int imgGround;
 int imgSky;
 int imgMountain;
+int imgHome;
 int imgCat; // 自機の画像
 int imgDog;
 int imgClaw;
@@ -37,7 +39,6 @@ int imgBAD[BADFOOD_KINDNUM]; // 敵機の画像
 int imgGOOD[GOODFOOD_KINDNUM]; // アイテムの画像
 //int bgm, jinOver, jinClear, seExpl, seItem, seShot; // 音の読み込み用
 int distance = 0; // ステージ終端までの距離
-//int bossIdx = 0;
 int stage = 1; // ステージ
 int score = 0; // スコア
 int hisco = 10000; // ハイスコア
@@ -51,6 +52,7 @@ int reverseTimer = 0;
 char effectText[100] = "";
 int effectTimer = 0;
 int effectColor = GetColor(0, 0, 0);
+bool houseFlag = false;
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -69,71 +71,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		ClearDrawScreen(); // 画面をクリアする
 
 		// ゲームの骨組みプログラムをここに記入する
-
-		ScrollBG(player.vx / 2);
-		timer++;
-		player.hp = player.hp - 1 - milkCount;
-
-		if (reverseTimer > 0) { reverseTimer--; }
-		DrawFormatString(0, 0, 0x000000,"distance=%d", distance);
-
-		if (distance > 0) { distance--; }
-		if (player.hp > 0) {
-			if (distance % 40 == 1)
-			{
-				int x = WIDTH;
-				int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
-				int b = GetRand(BADFOOD_KINDNUM - 1);
-				if (b == ONION) { SetBadFood(x, y, -player.vx, 0, ONION, imgBAD[ONION], 2); }
-				if (b == CHOCOLATE) {
-					int vy = 0;
-					if (player.y < y - 50) { vy = -3; }
-					if (player.y > y + 50) { vy = 3; }
-					SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
-				}
-				if (b == GRAPE) {
-					int vy = 0;
-					if (timer % 60 < 30)
-						vy -= 1;
-					else
-						vy += 1;
-					SetBadFood(x, HEIGHT * 3 / 4, -7, vy, GRAPE, imgBAD[GRAPE], 2);
-				}
-				if (b == COFFEE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, COFFEE, imgBAD[COFFEE], 2); }
-				if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
-				if (b == AVOCADO) { SetBadFood(x, player.y, -5-GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
-				if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
-				if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
-				if (b == DOG_FOOD) { SetBadFood(x, y, -player.vx/2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
-
-				int g = GetRand(GOODFOOD_KINDNUM - 1);
-				if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
-				if (g == VEGETABLES) {
-					int vy = 0;
-					if (player.y < y - 50) { vy = -5; }
-					if (player.y > y + 50) { vy = 5; }
-					SetGoodFood(x, y, -10, vy, VEGETABLES, imgGOOD[VEGETABLES], 1);  // チョコレートと同じ
-				}
-				if (g == APPLE) {
-					int vy = 0;
-					if (timer % 60 < 30)
-						vy -= 1;
-					else
-						vy += 1;
-					SetGoodFood(x, HEIGHT * 3 / 4, -3, vy, APPLE, imgGOOD[APPLE], 1);
-				} // ぶどうに似ている
-				if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
-				if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
-				if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
-				if (g == CAT_MILK) { SetGoodFood(x, player.y, -1 - timer / 100, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
-			}
-		}
-
-		MovePlayer();
+		int spd = player.vx / 2;
+		if (scene == PLAY && distance == 0) { spd = 0; }
+		ScrollBG(spd);
+		MoveHome();
 		MoveAttack();
 		MoveBadFood();
 		MoveDog();
 		MoveGoodFood();
+		StageMap();
 		if (coffeeCount > 0)
 		{
 			int target = coffeeCount * 50;
@@ -149,12 +95,129 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			DrawString(0, 650, effectText, effectColor);
 			effectTimer--;
 		}
+
+		timer++;
+		switch (scene)
+		{
+		case TITLE:
+			DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "CAT RUN", 0xffffff, 80);
+			DrawTextC(WIDTH * 0.5, HEIGHT * 0.7, "Press ENTER to start.", 0xffffff, 30);
+			if (CheckHitKey(KEY_INPUT_RETURN))
+			{
+				InitVariable();
+				scene = PLAY;
+			}
+			break;
+
+		case PLAY:
+			MovePlayer();
+			if (distance == STAGE_DISTANCE)
+			{
+				srand(stage);
+				//PlaySoundMem();
+			}
+			player.hp = player.hp - 1 - milkCount;
+			if (reverseTimer > 0) { reverseTimer--; }
+			if (distance > 0 && player.hp > 0) { distance -= player.vx; }
+			if (player.hp > 0) {
+				if (distance % 40 == 1)
+				{
+					DrawFormatString(0, 0, 0x000000, "distance=%d", distance);
+					int x = WIDTH;
+					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
+					int b = GetRand(BADFOOD_KINDNUM - 1);
+					if (b == ONION) { SetBadFood(x, y, -player.vx, 0, ONION, imgBAD[ONION], 2); }
+					if (b == CHOCOLATE) {
+						int vy = 0;
+						if (player.y < y - 50) { vy = -3; }
+						if (player.y > y + 50) { vy = 3; }
+						SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
+					}
+					if (b == GRAPE) {
+						int vy = 0;
+						if (timer % 60 < 30)
+							vy -= 1;
+						else
+							vy += 1;
+						SetBadFood(x, HEIGHT * 3 / 4, -7, vy, GRAPE, imgBAD[GRAPE], 2);
+					}
+					if (b == COFFEE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, COFFEE, imgBAD[COFFEE], 2); }
+					if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
+					if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
+					if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
+					if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
+					if (b == DOG_FOOD) { SetBadFood(x, y, -player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
+
+					int g = GetRand(GOODFOOD_KINDNUM - 1);
+					if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
+					if (g == VEGETABLES) {
+						int vy = 0;
+						if (player.y < y - 50) { vy = -5; }
+						if (player.y > y + 50) { vy = 5; }
+						SetGoodFood(x, y, -10, vy, VEGETABLES, imgGOOD[VEGETABLES], 1);  // チョコレートと同じ
+					}
+					if (g == APPLE) {
+						int vy = 0;
+						if (timer % 60 < 30)
+							vy -= 1;
+						else
+							vy += 1;
+						SetGoodFood(x, HEIGHT * 3 / 4, -3, vy, APPLE, imgGOOD[APPLE], 1);
+					} // ぶどうに似ている
+					if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
+					if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
+					if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
+					if (g == CAT_MILK) { SetGoodFood(x, player.y, -1 - timer / 100, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+				}
+				else if (distance <= 0 && houseFlag == false)
+				{
+					houseFlag = true;
+					SetHome(WIDTH + 505, HEIGHT / 4, -1, 0, imgHome);
+				}
+				if (player.hp == 0)
+				{
+					//StopSoundMem();
+					scene = OVER;
+					timer = 0;
+					break;
+				}
+			}
+			break;
+
+		case OVER:
+			if (timer == FPS * 3)
+			{
+				//PlaySoundMem();
+			}
+			else if (timer > FPS * 3) {
+				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "GAME OVER", 0xff0000, 80);
+			}
+			if (timer > FPS * 10) { scene = TITLE; }
+			break;
+
+		case CLEAR:
+			MovePlayer();
+			if (timer == FPS * 3)
+			{
+				//PlaySoundMem();
+			}
+			else
+			{
+				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "STAGE CLEAR!", 0x00ffff, 80);
+			}
+			if (timer > FPS * 10)
+			{
+				stage++;
+				distance = STAGE_DISTANCE;
+				scene = PLAY;
+			}
+			break;
+		}
 		ScreenFlip(); // 裏画面を表画面に反映させる
 		WaitTimer(1000 / FPS); // 一定時間待つ
 		if (ProcessMessage() == -1) { break; } // Windowsから情報を受け取りエラーが起きたら終了
 		if (CheckHitKey(KEY_INPUT_ESCAPE) == 1) { break; }
 	}
-
 	DxLib_End(); // DXライブラリ使用の終了処理
 	return 0;
 }
@@ -165,6 +228,7 @@ void InitGame(void) // Initは初期化という意味（initialize）
 	imgSky = LoadGraphWithCheck("repo用素材フォルダー/Sky.png");
 	imgMountain = LoadGraphWithCheck("repo用素材フォルダー/Mountain.png");
 	imgGround = LoadGraphWithCheck("repo用素材フォルダー/Ground.png");
+	imgHome = LoadGraphWithCheck("repo用素材フォルダー/House.png");
 
 	// 自機と自機の弾の画像の読み込み
 	imgCat = LoadGraphWithCheck("repo用素材フォルダー/Cat.png");
@@ -281,8 +345,8 @@ void MovePlayer(void)
 		oldMouse = GetMouseInput();
 		if (noDamageFrame > 0) { noDamageFrame--; }
 	}
-	if (noDamageFrame % 4 < 2) { DrawRectGraph(player.x - 47, player.y - 46, ix, 0, 94, 92, imgCat, TRUE, FALSE); }
 	if (player.hp > 0) {
+		if (noDamageFrame % 4 < 2) { DrawRectGraph(player.x - 47, player.y - 46, ix, 0, 94, 92, imgCat, TRUE, FALSE); }
 		count++;
 		if (count % 4 == 0) {
 			player.timer++;
@@ -291,8 +355,10 @@ void MovePlayer(void)
 	}
 	else
 	{
+		ix = 7 * 94;
 		player.vx = 0;
 		player.vy = 0;
+		DrawRectGraph(player.x - 47, player.y - 46, ix, 0, 94, 92, imgCat, TRUE, FALSE);
 	}
 }
 
@@ -656,6 +722,22 @@ void MoveDog(void)
 	}
 }
 
+int SetHome(int x, int y, int vx, int vy, int img)
+{
+	house.x = x;
+	house.y = y;
+	house.vx = vx;
+	house.vy = vy;
+	house.image =img;
+	return -1;
+}
+void MoveHome(void)
+{
+	house.x += house.vx;
+	house.y += house.vy;
+	DrawImage(house.image, house.x,house.y);
+}
+
 void DamageBadFood(int n, int dmg)
 {
 	BadFood[n].hp -= dmg;
@@ -687,6 +769,18 @@ void DrawText(int x, int y, const char* txt, int val, int col, int siz)
 	DrawFormatString(x, y, col, txt, val);
 }
 
+void StageMap(void)
+{
+	int mx = 60,my = HEIGHT- 700;
+	int wi = WIDTH-120, he = 20;
+	int pos = wi * (STAGE_DISTANCE - distance) / STAGE_DISTANCE;
+	SetDrawBlendMode(DX_BLENDMODE_SUB, 128);
+	DrawBox(mx, my, mx + wi, my + he, 0xffffff, TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	DrawBox(mx - 1, my - 1, mx + wi + 1, my + he + 1, 0xffffff, FALSE);
+	DrawCircle(mx + pos, my + he / 2, 10, 0x00ffff, TRUE);
+}
+
 void DrawParameter(void)
 {
 	int x = 10, y = HEIGHT - 30;
@@ -695,6 +789,16 @@ void DrawParameter(void)
 	{
 		DrawBox(x+1 + i, y + 2, x + i, y + 18, 0x00ff00, TRUE);
 	}
+}
+
+void DrawTextC(int x,int y, const char* txt, int col, int siz)
+{
+	SetFontSize(siz);
+	int strWidth = GetDrawStringWidth(txt, strlen(txt));
+	x -= strWidth / 2;
+	y -= siz / 2;
+	DrawString(x + 1, y + 1, txt, 0x000000);
+	DrawString(x, y, txt, col);
 }
 
 // 画像の読み込み、読み込み失敗時は通知
