@@ -37,7 +37,7 @@ int imgDog;
 int imgClaw;
 int imgBAD[BADFOOD_KINDNUM]; // 敵機の画像
 int imgGOOD[GOODFOOD_KINDNUM]; // アイテムの画像
-//int bgm, jinOver, jinClear, seExpl, seItem, seShot; // 音の読み込み用
+int bgm, jinOver, jinClear, seDamage, seItem, seClaw; // 音の読み込み用
 int distance = 0; // ステージ終端までの距離
 int stage = 1; // ステージ
 int score = 0; // スコア
@@ -52,6 +52,7 @@ int reverseTimer = 0;
 char effectText[100] = "";
 int effectTimer = 0;
 int effectColor = GetColor(0, 0, 0);
+int deathCount = 0;
 bool houseFlag = false;
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
@@ -92,11 +93,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		DrawParameter();
 		if (effectTimer > 0)
 		{
-			DrawString(0, 650, effectText, effectColor);
+			DrawTextC(WIDTH/2, 650, effectText, effectColor, 20);
 			effectTimer--;
 		}
 
 		timer++;
+
+		DrawFormatString(0, 0, 0xffffff, "%d", timer);
 		switch (scene)
 		{
 		case TITLE:
@@ -104,25 +107,143 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			DrawTextC(WIDTH * 0.5, HEIGHT * 0.7, "Press ENTER to start.", 0xffffff, 30);
 			if (CheckHitKey(KEY_INPUT_RETURN))
 			{
+				houseFlag = false;
 				InitVariable();
+				distance = STAGE_DISTANCE;
+				timer = 0;
 				scene = PLAY;
+			}
+			if (stage == 1) {
+				if (deathCount == 0) {
+					if (timer > FPS * 10 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "あれ？スタートしないの...？", 0xffffff, 20);
+					if (timer > FPS * 20 && FPS * 30 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "どれだけ待たせるの？", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "我慢対決してるわけじゃないのよ？", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "キミってもしかしてヒマなの...?", 0xffffff, 20);
+					if (timer > FPS * 50 && FPS * 60 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(自分が黙ればいいのかな...)", 0xffffff, 20);
+				}
+				else if(deathCount==1){
+					if (timer > FPS * 10 && FPS * 15 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "諦めないで！", 0xffffff, 20);
+					if (timer > FPS * 15 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "諦めるまでは負けじゃないから！", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "...えっとー...そろそろ次に進んでいいんじゃないかな...", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "いやならやめてもらってもいいけど...", 0xffffff, 20);
+					if (timer > FPS * 50 && FPS * 60 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+				}
+				else if(deathCount==2){
+					if (timer > FPS * 10 && FPS * 15 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "あと少し！頑張って！", 0xffffff, 20);
+					if (timer > FPS * 15 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "次は行ける！だから諦めないで！", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "...そこまで次に行きたくないの...？", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "もうせかさないよ...", 0xffffff, 20);
+					if (timer > FPS * 50 && FPS * 60 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+				}
+			}
+			else if(stage == 2) {
+				if (deathCount == 0) {
+					if (timer > FPS * 10 && FPS * 15 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage１クリアおめでとう！", 0xffffff, 20);
+					if (timer > FPS * 15 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage２は別に１と変わらないからやらなくてもいいよ", 0xffffff, 20);
+					if (timer > FPS * 20 && FPS * 30 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "やるの？やらないの？", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "まぁ好きにすればいいと思うよ...", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(もう黙ろ...)", 0xffffff, 20);
+				}
+				else if (deathCount == 1) {
+					if (timer > FPS * 10 && FPS * 15 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage１をクリアしたキミならstage２もクリアできるはず！", 0xffffff, 20);
+					if (timer > FPS * 15 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "キミの本気はこんなもんじゃないだろ？", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "あーごめんうるさすぎたかな...？", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "うるさかったらもう黙るから...", 0xffffff, 20);
+					if (timer > FPS * 50 && FPS * 60 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+				}
+				else if (deathCount == 2) {
+					if (timer > FPS * 10 && FPS * 15 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "もしかしてstage１と２とでは難易度が違うのかな...", 0xffffff, 20);
+					if (timer > FPS * 15 && FPS * 20 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "しっかりクリアチェックしてないからわかんないや！", 0xffffff, 20);
+					if (timer > FPS * 30 && FPS * 40 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "ごめん...しっかりクリアチェックしておくから...", 0xffffff, 20);
+					if (timer > FPS * 40 && FPS * 50 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "ただ、あきらめないで...", 0xffffff, 20);
+					if (timer > FPS * 50 && FPS * 60 >= timer)
+						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+				}
+			}
+			else if(stage == 3) {
+				if (timer > FPS * 10 && FPS * 15 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage２やってくれたんだ...ありがとう...", 0xffffff, 20);
+				if (timer > FPS * 15 && FPS * 20 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "でもなんでこのゲームこんなにやってくれるの？面白味あんまりないでしょ？", 0xffffff, 20);
+				if (timer > FPS * 20 && FPS * 25 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "もしかしてこの後何が起こるか気になるの？", 0xffffff, 20);
+				if (timer > FPS * 25 && FPS * 30 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "何もないのに...", 0xffffff, 20);
+				if (timer > FPS * 30 && FPS * 40 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+			}
+			else if (deathCount == 1) {
+				if (timer > FPS * 10 && FPS * 15 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage２もクリアできたならいけるはず...", 0xffffff, 20);
+				if (timer > FPS * 15 && FPS * 20 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "キミもしかして反応を見て楽しんでたりする...？", 0xffffff, 20);
+				if (timer > FPS * 20 && FPS * 25 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "本気でやってたら本当にごめん", 0xffffff, 20);
+				if (timer > FPS * 40 && FPS * 50 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "...楽しんでるよね？", 0xffffff, 20);
+				if (timer > FPS * 50 && FPS * 60 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
+			}
+			else if (deathCount == 2) {
+				if (timer > FPS * 10 && FPS * 15 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "わざとじゃないよね...", 0xffffff, 20);
+				if (timer > FPS * 15 && FPS * 20 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "わざとじゃないならほんとにごめんだけど", 0xffffff, 20);
+				if (timer > FPS * 30 && FPS * 40 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "やっぱり反応楽しんでるよね？", 0xffffff, 20);
+				if (timer > FPS * 40 && FPS * 50 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "さすがにもう黙るよ...", 0xffffff, 20);
+				if (timer > FPS * 50 && FPS * 60 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
 			}
 			break;
 
 		case PLAY:
+
 			MovePlayer();
 			if (distance == STAGE_DISTANCE)
 			{
 				srand(stage);
-				//PlaySoundMem();
+				StopSoundMem(jinClear);
+				PlaySoundMem(bgm,DX_PLAYTYPE_LOOP);
 			}
-			player.hp = player.hp - 1 - milkCount;
+			if (player.hp > 0) {
+				player.hp = player.hp - 1 - milkCount;
+			}
 			if (reverseTimer > 0) { reverseTimer--; }
 			if (distance > 0 && player.hp > 0) { distance -= player.vx; }
 			if (player.hp > 0) {
-				if (distance % 40 == 1)
+				if (timer % 30 == 1&&distance>0)
 				{
-					DrawFormatString(0, 0, 0x000000, "distance=%d", distance);
 					int x = WIDTH;
 					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
 					int b = GetRand(BADFOOD_KINDNUM - 1);
@@ -146,7 +267,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
 					if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
 					if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
-					if (b == DOG_FOOD) { SetBadFood(x, y, -player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
+					if (b == DOG_FOOD) { SetBadFood(x, y, -1-player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
 
 					int g = GetRand(GOODFOOD_KINDNUM - 1);
 					if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
@@ -169,47 +290,61 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
 					if (g == CAT_MILK) { SetGoodFood(x, player.y, -1 - timer / 100, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
 				}
-				else if (distance <= 0 && houseFlag == false)
+				if (distance < 0 && houseFlag == false)
 				{
+					SetHome(WIDTH + 505, HEIGHT / 4, -player.vx/2, 0, imgHome);
 					houseFlag = true;
-					SetHome(WIDTH + 505, HEIGHT / 4, -1, 0, imgHome);
 				}
-				if (player.hp == 0)
-				{
-					//StopSoundMem();
-					scene = OVER;
-					timer = 0;
-					break;
-				}
+			}
+			if (player.hp <= 0)
+			{
+				StopSoundMem(bgm);
+				deathCount++;
+				timer = 0;
+				scene = OVER;
+				milkCount = 0;
+				coffeeCount = 0;
+				player.vx = 0;
+				player.vy = 0;
+				break;
 			}
 			break;
 
 		case OVER:
+			DrawRectGraph(player.x - 47, player.y - 46, 7 * 94, 0, 94, 92, imgCat, TRUE, FALSE);
 			if (timer == FPS * 3)
 			{
-				//PlaySoundMem();
+				PlaySoundMem(jinOver,DX_PLAYTYPE_BACK);
 			}
 			else if (timer > FPS * 3) {
 				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "GAME OVER", 0xff0000, 80);
 			}
-			if (timer > FPS * 10) { scene = TITLE; }
+			if (timer > FPS * 10)
+			{ 
+				timer = 0;
+				scene = TITLE; 
+			}
 			break;
 
 		case CLEAR:
-			MovePlayer();
-			if (timer == FPS * 3)
+			DrawRectGraph(player.x - 47, player.y - 46, 7 * 94, 0, 94, 92, imgCat, TRUE, FALSE);
+			if (timer == FPS * 2)
 			{
-				//PlaySoundMem();
+				PlaySoundMem(jinClear, DX_PLAYTYPE_BACK);
 			}
-			else
+			else if (timer > FPS * 2)
 			{
-				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "STAGE CLEAR!", 0x00ffff, 80);
+				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "STAGE CLEAR!", 0xffff00, 80);
 			}
 			if (timer > FPS * 10)
 			{
+				house.state = 0;
+				houseFlag = false;
 				stage++;
+				deathCount = 0;
 				distance = STAGE_DISTANCE;
-				scene = PLAY;
+				timer = 0;
+				scene = TITLE;
 			}
 			break;
 		}
@@ -254,15 +389,18 @@ void InitGame(void) // Initは初期化という意味（initialize）
 	// その他の画像の読み込み
 
 	//// サウンドの読み込みと音量設定
-	//bgm = LoadSoundMemWithCheck("sound/bgm.mp3");
-	//jinOver = LoadSoundMemWithCheck("sound/gameover.mp3");
-	//jinClear = LoadSoundMemWithCheck("sound/stageclear.mp3");
-	//seExpl = LoadSoundMemWithCheck("sound/explosion.mp3");
-	//seItem = LoadSoundMemWithCheck("sound/item.mp3");
-	//seShot = LoadSoundMemWithCheck("sound/shot.mp3");
-	//ChangeVolumeSoundMem(128, bgm);
-	//ChangeVolumeSoundMem(128, jinOver);
-	//ChangeVolumeSoundMem(128, jinClear);
+	bgm = LoadSoundMemWithCheck("repo用素材フォルダー/AS_1277579_[生ギター]ワクワク楽しい気分になれる曲.mp3");
+	jinOver = LoadSoundMemWithCheck("repo用素材フォルダー/AS_1643845_ゲームオーバー時のジングル音.mp3");
+	jinClear = LoadSoundMemWithCheck("repo用素材フォルダー/AS_159722_重厚で迫力のあるファンファーレ.mp3");
+	seDamage = LoadSoundMemWithCheck("repo用素材フォルダー/AS_105935_バババッ（ダメージを受けた電子音）.mp3");
+	seItem = LoadSoundMemWithCheck("repo用素材フォルダー/AS_1272919_キラキラ、回復音_A.mp3");
+	seClaw = LoadSoundMemWithCheck("repo用素材フォルダー/AS_1656988_シュンッ！鋭く素早い剣の斬撃音.mp3");
+	ChangeVolumeSoundMem(128, bgm);
+	ChangeVolumeSoundMem(128, jinOver);
+	ChangeVolumeSoundMem(128, jinClear);
+	ChangeVolumeSoundMem(128, seDamage);
+	ChangeVolumeSoundMem(128, seItem);
+	ChangeVolumeSoundMem(128, seClaw);
 }
 
 void ScrollBG(int spd) 
@@ -286,6 +424,15 @@ void InitVariable(void)
 	player.hp = PLAYER_HP_MAX;
 	player.wid = 94;
 	player.hei = 92;
+	house.state = 0;
+	for (int i = 0; i < BADFOOD_MAX; i++) {
+		if (BadFood[i].state == 0) { continue; }
+		BadFood[i].state = 0;
+	}
+	for (int i = 0; i < GOODFOOD_MAX; i++) {
+		if (GoodFood[i].state == 0) { continue; }
+		GoodFood[i].state = 0;
+	}
 }
 
 void DrawImage(int img, int x, int y)
@@ -353,13 +500,6 @@ void MovePlayer(void)
 			if (player.timer >= 7) { player.timer = 0; }
 		}
 	}
-	else
-	{
-		ix = 7 * 94;
-		player.vx = 0;
-		player.vy = 0;
-		DrawRectGraph(player.x - 47, player.y - 46, ix, 0, 94, 92, imgCat, TRUE, FALSE);
-	}
 }
 
 void SetAttack(void)
@@ -372,6 +512,7 @@ void SetAttack(void)
 			attack[i].timer = 0;
 			attack[i].wid = 82;
 			attack[i].hei = 30;
+			PlaySoundMem(seClaw, DX_PLAYTYPE_BACK);
 			break;
 		}
 	}
@@ -437,16 +578,20 @@ void MoveBadFood(void)
 			int dy = abs((int)(BadFood[i].y - player.y));
 			if (dx < BadFood[i].wid / 2 + player.wid / 2 && dy < BadFood[i].hei/2 + player.hei / 2) {
 				if (player.hp > 0) {
-					if (BadFood[i].pattern == ONION) {
+					PlaySoundMem(seDamage, DX_PLAYTYPE_BACK);
+					switch (BadFood[i].pattern)
+					{
+					case ONION:
 						player.hp -= 10;
 						player.vx -= 1;
 						if (player.vx < 1)
 							player.vx = 1;
 						strcpy_s(effectText, "たまねぎを食べてしまった！横への移動が苦しくなった...");
-						effectColor = GetColor(255,0,0);
+						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == CHOCOLATE) {
+					break;
+
+					case CHOCOLATE:
 						player.hp -= 10;
 						player.vy -= 1;
 						if (player.vy < 1)
@@ -454,28 +599,32 @@ void MoveBadFood(void)
 						strcpy_s(effectText, "チョコレートを食べてしまった！縦への移動が苦しくなった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == GRAPE) {
+						break;
+
+					case GRAPE:
 						player.hp -= 20;
 						strcpy_s(effectText, "ぶどうを食べてしまった！体力が他より少し多く減ってしまった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == COFFEE) {
+						break;
+					
+					case COFFEE:
 						player.hp -= 10;
 						coffeeCount++;
 						strcpy_s(effectText, "コーヒーを飲んでしまった！目の前が少し暗くなった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == BEER) {
+						break;
+
+					case BEER:
 						player.hp -= 10;
 						reverseTimer = FPS * 5;
 						strcpy_s(effectText, "アルコールを取ってしまった！めまいがして移動が反転してしまった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == AVOCADO) {
+						break;
+
+					case AVOCADO:
 						player.hp -= 10;
 						player.vx -= 1;
 						if (player.vx < 1)
@@ -486,8 +635,9 @@ void MoveBadFood(void)
 						strcpy_s(effectText, "アボカドを食べてしまった！縦横の移動が苦しくなった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == RAW_FISH) {
+						break;
+
+					case RAW_FISH:
 						player.hp -= 10;
 						player.vx -= 2;
 						if (player.vx < 1)
@@ -498,9 +648,12 @@ void MoveBadFood(void)
 						strcpy_s(effectText, "生魚を食べてしまった！縦横の移動がとても苦しくなった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
-					}
-					if (BadFood[i].pattern == MILK) {
+						break;
+
+					case MILK:
 						player.hp += 150;
+						if (player.hp > PLAYER_HP_MAX)
+							player.hp = PLAYER_HP_MAX;
 						milkCount++;
 						player.vx -= 2;
 						if (player.vx < 1)
@@ -511,24 +664,26 @@ void MoveBadFood(void)
 						strcpy_s(effectText, "人間用の牛乳を飲んでしまった！一時的に回復したが、HPが減りやすくなった...");
 						effectColor = GetColor(255, 0, 0);
 						effectTimer = FPS * 2;
+						break;
+
+					case DOG_FOOD:
+						player.hp = player.hp - 1-GetRand(100);
+						player.vx -= 10;
+						if (player.vx < 0)
+							player.vx = 1;
+						player.vy -= 10;
+						if (player.vy < 0)
+							player.vy = 1;
+						SetDog(WIDTH, player.y, -50, 0, 0, imgDog, 10);
+						SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
+						SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
+						SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
+						SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
+						strcpy_s(effectText, "ドッグフードを食べてしまった！移動が困難になり、犬が怒ってしまった...");
+						effectColor = GetColor(255, 0, 0);
+						effectTimer = FPS * 2;
+						break;
 					}
-				}
-				if (BadFood[i].pattern == DOG_FOOD) {
-					player.hp -= 1;
-					player.vx -= 10;
-					if (player.vx < 0)
-						player.vx = 1;
-					player.vy -= 10;
-					if (player.vy < 0)
-						player.vy = 1;
-					SetDog(WIDTH, player.y, -50, 0, 0, imgDog, 10);
-					SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
-					SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
-					SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
-					SetDog(WIDTH, GetRand(1000)-500, -50, 0, 0, imgDog, 10);
-					strcpy_s(effectText, "ドッグフードを食べてしまった！移動が困難になり、犬が怒ってしまった...");
-					effectColor = GetColor(255, 0, 0);
-					effectTimer = FPS * 2;
 				}
 				noDamageFrame = FPS/2;
 				BadFood[i].state = 0;
@@ -579,7 +734,10 @@ void MoveGoodFood(void)
 		int dy = abs((int)(GoodFood[i].y - player.y));
 		if (dx < GoodFood[i].wid / 2 + player.wid / 2 && dy < GoodFood[i].hei /2 + player.hei / 2) {
 			if (player.hp > 0) {
-				if (GoodFood[i].pattern == VEGETABLES) {
+				PlaySoundMem(seItem, DX_PLAYTYPE_BACK);
+				switch (GoodFood[i].pattern)
+				{
+				case VEGETABLES:
 					player.hp += 20;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
@@ -589,8 +747,9 @@ void MoveGoodFood(void)
 					strcpy_s(effectText, "野菜を食べた！横の移動がはやくなった！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-				}
-				if (GoodFood[i].pattern == WATERMELON) {
+					break;
+
+				case WATERMELON:
 					player.hp += 20;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
@@ -600,25 +759,27 @@ void MoveGoodFood(void)
 					strcpy_s(effectText, "スイカを食べた！縦の移動がはやくなった！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-
-				}
-				if (GoodFood[i].pattern == APPLE) {
-					player.hp += 40;
+					break;
+					
+				case APPLE:
+					player.hp = player.hp +1+GetRand(50);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
-					strcpy_s(effectText, "リンゴを食べた！他よりHPが少し多く回復したった！");
+					strcpy_s(effectText, "リンゴを食べた！HPがランダムで回復した！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-				}
-				if (GoodFood[i].pattern == BANANA) {
+					break;
+
+				case BANANA:
 					player.hp += 60;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					strcpy_s(effectText, "バナナを食べた！他よりHPが多く回復した！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-				}
-				if (GoodFood[i].pattern == COOKED_FISH) {
+					break;
+					
+				case COOKED_FISH:
 					player.hp += 20;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
@@ -631,8 +792,9 @@ void MoveGoodFood(void)
 					strcpy_s(effectText, "焼き魚を食べた！縦横の移動がさらにはやくなった！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-				}
-				if (GoodFood[i].pattern == CAT_MILK) {
+					break;
+
+				case CAT_MILK:
 					player.hp += 20;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
@@ -652,8 +814,9 @@ void MoveGoodFood(void)
 					strcpy_s(effectText, "猫用の牛乳を飲んだ！全ての状態異常が軽減され、縦横の移動がはやくなった！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
-				}
-				if (GoodFood[i].pattern == CAT_FOOD) {
+					break;
+
+				case CAT_FOOD:
 					player.hp += 200;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
@@ -666,6 +829,7 @@ void MoveGoodFood(void)
 					strcpy_s(effectText, "キャットフードを食べた！HPが大幅に回復し、縦横の移動が非常にはやくなった！");
 					effectColor = GetColor(0,255,  0);
 					effectTimer = FPS * 2;
+					break;
 				}
 				GoodFood[i].state = 0;
 			}
@@ -724,18 +888,37 @@ void MoveDog(void)
 
 int SetHome(int x, int y, int vx, int vy, int img)
 {
-	house.x = x;
-	house.y = y;
-	house.vx = vx;
-	house.vy = vy;
-	house.image =img;
-	return -1;
+	if (house.state == 0) {
+		house.x = x;
+		house.y = y;
+		house.vx = vx;
+		house.vy = vy;
+		house.image = img;
+		house.state = 1;
+		GetGraphSize(img, &house.wid, &house.hei);
+		return -1;
+	}
 }
 void MoveHome(void)
 {
+	if (house.state == 0) { return; }
 	house.x += house.vx;
 	house.y += house.vy;
 	DrawImage(house.image, house.x,house.y);
+
+	int dx = abs((int)(house.x - player.x));
+	int dy = abs((int)(house.y - player.y));
+	if (dx < house.wid / 2 + player.wid / 2 && dy < house.hei / 2 + player.hei / 2 && scene == PLAY) {
+		StopSoundMem(bgm);
+		milkCount = 0;
+		coffeeCount = 0;
+		player.vx = 0;
+		player.vy = 0;
+		house.vx = 0;
+		timer = 0;
+		house.state = 0;
+		scene = CLEAR;
+	}
 }
 
 void DamageBadFood(int n, int dmg)
@@ -789,6 +972,9 @@ void DrawParameter(void)
 	{
 		DrawBox(x+1 + i, y + 2, x + i, y + 18, 0x00ff00, TRUE);
 	}
+	DrawText(x, y - 25, "wid speed lv %02d", player.vx, 0xffffff, 20);
+	DrawText(x, y - 50, "hei speed lv %02d", player.vy, 0xffffff, 20);
+	DrawText(x, y - 75, "HP %02d", player.hp, 0xffffff, 20);
 }
 
 void DrawTextC(int x,int y, const char* txt, int col, int siz)
@@ -805,6 +991,13 @@ void DrawTextC(int x,int y, const char* txt, int col, int siz)
 int LoadGraphWithCheck(const char* file)
 {
 	int res = LoadGraph(file);
+	if (res == -1) { MessageBox(GetMainWindowHandle(), file, "画像の読み込みに失敗", MB_OK | MB_ICONSTOP); }
+	return res;
+}
+
+int LoadSoundMemWithCheck(const char* file)
+{
+	int res = LoadSoundMem(file);
 	if (res == -1) { MessageBox(GetMainWindowHandle(), file, "画像の読み込みに失敗", MB_OK | MB_ICONSTOP); }
 	return res;
 }
