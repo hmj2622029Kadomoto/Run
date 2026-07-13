@@ -254,14 +254,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 						if (player.y > y + 50) { vy = 3; }
 						SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
 					}
-					if (b == GRAPE) {
-						int vy = 0;
-						if (timer % 60 < 30)
-							vy -= 1;
-						else
-							vy += 1;
-						SetBadFood(x, HEIGHT * 3 / 4, -7, vy, GRAPE, imgBAD[GRAPE], 2);
-					}
+					if (b == GRAPE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -1 - player.vx, 1, GRAPE, imgBAD[GRAPE], 2); }
 					if (b == COFFEE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, COFFEE, imgBAD[COFFEE], 2); }
 					if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
 					if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
@@ -288,7 +281,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
 					if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
 					if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
-					if (g == CAT_MILK) { SetGoodFood(x, player.y, -1 - timer / 100, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+					if (g == CAT_MILK) { SetGoodFood(x, y, -1-player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
 				}
 				if (distance < 0 && houseFlag == false)
 				{
@@ -311,6 +304,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			break;
 
 		case OVER:
+			player.hp = 0;
 			DrawRectGraph(player.x - 47, player.y - 46, 7 * 94, 0, 94, 92, imgCat, TRUE, FALSE);
 			if (timer == FPS * 3)
 			{
@@ -424,7 +418,16 @@ void InitVariable(void)
 	player.hp = PLAYER_HP_MAX;
 	player.wid = 94;
 	player.hei = 92;
+
+	coffeeCount = 0;
+	milkCount = 0;
+	reverseTimer = 0;
+	darkness = 0;
+	effectTimer = 0;
+
+	houseFlag = false;
 	house.state = 0;
+
 	for (int i = 0; i < BADFOOD_MAX; i++) {
 		if (BadFood[i].state == 0) { continue; }
 		BadFood[i].state = 0;
@@ -557,6 +560,15 @@ void MoveBadFood(void)
 {
 	for (int i = 0; i < BADFOOD_MAX; i++) {
 		if (BadFood[i].state == 0) { continue; }
+		if (BadFood[i].pattern == GRAPE)
+		{
+			if (BadFood[i].timer % 60 < 30)
+				BadFood[i].vx = -5;
+			else
+				BadFood[i].vx = 5;
+
+			BadFood[i].timer++;
+		}
 		BadFood[i].x += BadFood[i].vx;
 		BadFood[i].y += BadFood[i].vy;
 		DrawImage(BadFood[i].image, BadFood[i].x, BadFood[i].y);
@@ -715,6 +727,21 @@ void MoveGoodFood(void)
 {
 	for (int i = 0; i < GOODFOOD_MAX; i++) {
 		if (GoodFood[i].state == 0) { continue; }
+		if (GoodFood[i].pattern == CAT_MILK)
+		{
+			if (GoodFood[i].timer % 60 < 30)
+				GoodFood[i].vy = -5;
+			else
+				GoodFood[i].vy = 5;
+
+			GoodFood[i].timer++;
+		}
+		if (GoodFood[i].pattern == CAT_FOOD)
+		{
+			if (GoodFood[i].x <= WIDTH*3/4)
+				GoodFood[i].vy = -player.vy;
+			GoodFood[i].timer++;
+		}
 		GoodFood[i].x += GoodFood[i].vx;
 		GoodFood[i].y += GoodFood[i].vy;
 		DrawImage(GoodFood[i].image, GoodFood[i].x, GoodFood[i].y);
@@ -738,7 +765,7 @@ void MoveGoodFood(void)
 				switch (GoodFood[i].pattern)
 				{
 				case VEGETABLES:
-					player.hp += 20;
+					player.hp += HealByStage(20);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vx += 1;
@@ -750,7 +777,7 @@ void MoveGoodFood(void)
 					break;
 
 				case WATERMELON:
-					player.hp += 20;
+					player.hp += HealByStage(20);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vy += 1;
@@ -762,7 +789,7 @@ void MoveGoodFood(void)
 					break;
 					
 				case APPLE:
-					player.hp = player.hp +1+GetRand(50);
+					player.hp = player.hp +1+HealByStage(GetRand(50));
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					strcpy_s(effectText, "リンゴを食べた！HPがランダムで回復した！");
@@ -771,7 +798,7 @@ void MoveGoodFood(void)
 					break;
 
 				case BANANA:
-					player.hp += 60;
+					player.hp += HealByStage(60);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					strcpy_s(effectText, "バナナを食べた！他よりHPが多く回復した！");
@@ -780,7 +807,7 @@ void MoveGoodFood(void)
 					break;
 					
 				case COOKED_FISH:
-					player.hp += 20;
+					player.hp += HealByStage(20);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vx += 2;
@@ -795,7 +822,7 @@ void MoveGoodFood(void)
 					break;
 
 				case CAT_MILK:
-					player.hp += 20;
+					player.hp += HealByStage(20);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					milkCount--;
@@ -817,7 +844,7 @@ void MoveGoodFood(void)
 					break;
 
 				case CAT_FOOD:
-					player.hp += 200;
+					player.hp += HealByStage(200);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vx += 5;
@@ -898,6 +925,7 @@ int SetHome(int x, int y, int vx, int vy, int img)
 		GetGraphSize(img, &house.wid, &house.hei);
 		return -1;
 	}
+	return 0;
 }
 void MoveHome(void)
 {
@@ -916,7 +944,6 @@ void MoveHome(void)
 		player.vy = 0;
 		house.vx = 0;
 		timer = 0;
-		house.state = 0;
 		scene = CLEAR;
 	}
 }
@@ -968,10 +995,7 @@ void DrawParameter(void)
 {
 	int x = 10, y = HEIGHT - 30;
 	DrawBox(x, y, x + PLAYER_HP_MAX, y + 20, 0x000000, TRUE);
-	for (int i = 0; i < player.hp; i++)
-	{
-		DrawBox(x+1 + i, y + 2, x + i, y + 18, 0x00ff00, TRUE);
-	}
+	DrawBox(x+1, y + 2, x + player.hp, y + 18, 0x00ff00, TRUE);
 	DrawText(x, y - 25, "wid speed lv %02d", player.vx, 0xffffff, 20);
 	DrawText(x, y - 50, "hei speed lv %02d", player.vy, 0xffffff, 20);
 	DrawText(x, y - 75, "HP %02d", player.hp, 0xffffff, 20);
@@ -985,6 +1009,16 @@ void DrawTextC(int x,int y, const char* txt, int col, int siz)
 	y -= siz / 2;
 	DrawString(x + 1, y + 1, txt, 0x000000);
 	DrawString(x, y, txt, col);
+}
+
+int HealByStage(int heal)
+{
+	int result = heal * (100 - (stage - 1) * 15) / 100;
+	if (result < 5)
+	{
+		result = 5;
+	}
+	return result;
 }
 
 // 画像の読み込み、読み込み失敗時は通知

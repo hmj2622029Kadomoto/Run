@@ -42,6 +42,6 @@ void DrawParameter(void);
 void DrawTextC(int x, int y, const char* txt, int col, int siz);
 
 
-
+int HealByStage(int heal);
 int LoadGraphWithCheck(const char* file);
 int LoadSoundMemWithCheck(const char* file);
