@@ -83,9 +83,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		StageMap();
 		if (coffeeCount > 0)
 		{
-			int target = coffeeCount * 50;
+			int target = coffeeCount * 50 * stage;
 			if (target > 255) { target = 255; }
-			if (darkness < target) { darkness++; }
+			if (darkness <= target) { darkness++; }
+			else if (darkness > target) { darkness--; }
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, darkness);
 			DrawBox(0, 0, WIDTH, HEIGHT, 0x000000, TRUE);
 			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
@@ -236,13 +237,16 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				StopSoundMem(jinClear);
 				PlaySoundMem(bgm,DX_PLAYTYPE_LOOP);
 			}
+			if (timer <= 60) {
+				DrawText(0, 0, "STAGE %d", stage, 0xffffff, 60);
+			}
 			if (player.hp > 0) {
 				player.hp = player.hp - 1 - milkCount;
 			}
 			if (reverseTimer > 0) { reverseTimer--; }
 			if (distance > 0 && player.hp > 0) { distance -= player.vx; }
 			if (player.hp > 0) {
-				if (timer % 30 == 1&&distance>0)
+				if (timer % (35 - stage * 5) == 1 && distance > 0)
 				{
 					int x = WIDTH;
 					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
@@ -255,13 +259,17 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 						SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
 					}
 					if (b == GRAPE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -1 - player.vx, 1, GRAPE, imgBAD[GRAPE], 2); }
-					if (b == COFFEE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, COFFEE, imgBAD[COFFEE], 2); }
+					if (b == COFFEE) { SetBadFood(x, y, -1 - player.vx, 0, COFFEE, imgBAD[COFFEE], 2); }
 					if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
 					if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
 					if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
 					if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
-					if (b == DOG_FOOD) { SetBadFood(x, y, -1-player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
-
+					if (b == DOG_FOOD) { SetBadFood(x, y, -1 - player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
+				}
+				if (timer % (25 + stage * 5) == 1 && distance > 0)
+				{
+					int x = WIDTH;
+					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
 					int g = GetRand(GOODFOOD_KINDNUM - 1);
 					if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
 					if (g == VEGETABLES) {
@@ -281,7 +289,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
 					if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
 					if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
-					if (g == CAT_MILK) { SetGoodFood(x, y, -1-player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+					if (g == CAT_MILK) { SetGoodFood(x, y, -1 - player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
 				}
 				if (distance < 0 && houseFlag == false)
 				{
@@ -296,7 +304,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				timer = 0;
 				scene = OVER;
 				milkCount = 0;
-				coffeeCount = 0;
 				player.vx = 0;
 				player.vy = 0;
 				break;
@@ -313,7 +320,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			else if (timer > FPS * 3) {
 				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "GAME OVER", 0xff0000, 80);
 			}
-			if (timer > FPS * 10)
+			if (timer > FPS * 10 || CheckHitKey(KEY_INPUT_RETURN))
 			{ 
 				timer = 0;
 				scene = TITLE; 
@@ -330,7 +337,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			{
 				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "STAGE CLEAR!", 0xffff00, 80);
 			}
-			if (timer > FPS * 10)
+			if (timer > FPS * 10 || CheckHitKey(KEY_INPUT_RETURN))
 			{
 				house.state = 0;
 				houseFlag = false;
@@ -569,6 +576,10 @@ void MoveBadFood(void)
 
 			BadFood[i].timer++;
 		}
+		if (BadFood[i].pattern == DOG_FOOD)
+		{
+			BadFood[i].y = player.y;
+		}
 		BadFood[i].x += BadFood[i].vx;
 		BadFood[i].y += BadFood[i].vy;
 		DrawImage(BadFood[i].image, BadFood[i].x, BadFood[i].y);
@@ -738,9 +749,7 @@ void MoveGoodFood(void)
 		}
 		if (GoodFood[i].pattern == CAT_FOOD)
 		{
-			if (GoodFood[i].x <= WIDTH*3/4)
-				GoodFood[i].vy = -player.vy;
-			GoodFood[i].timer++;
+			GoodFood[i].y = HEIGHT + HEIGHT/2 - player.y;
 		}
 		GoodFood[i].x += GoodFood[i].vx;
 		GoodFood[i].y += GoodFood[i].vy;
