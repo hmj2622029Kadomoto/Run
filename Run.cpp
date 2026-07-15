@@ -2,6 +2,7 @@
 #include "Run.h"
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 // 定数の定義
 const int WIDTH = 1200, HEIGHT = 720; // ウィンドウの幅と高さのピクセル数
@@ -16,7 +17,7 @@ const int STAGE_DISTANCE = FPS * 420; // ステージの長さ
 const int PLAYER_HP_MAX = 1000;
 enum { ONION, CHOCOLATE, GRAPE, COFFEE, BEER, AVOCADO, RAW_FISH, MILK, DOG_FOOD,	BADFOOD_KINDNUM }; // ダメな食べ物の種類
 enum { COOKED_FISH, VEGETABLES, APPLE, WATERMELON, BANANA, CAT_FOOD, CAT_MILK,	GOODFOOD_KINDNUM }; // 良い食べ物の種類
-enum { TITLE, PLAY, OVER, CLEAR }; // シーンを分けるための列挙定数
+enum { TITLE, PLAY, OVER, CLEAR, COMPLETE }; // シーンを分けるための列挙定数
 const char BadFoodImageName[BADFOOD_KINDNUM][10] = { "Onion","Chocolate","Grape","Coffee","Beer","Avocado","RawFish","Milk","DogFood" };
 const char GoodFoodImageName[GOODFOOD_KINDNUM][13] = { "CookedFish","Carrot","Apple","WaterMelon","Banana","CatFood","CatMilk" };
 // グローバル変数
@@ -53,6 +54,7 @@ char effectText[100] = "";
 int effectTimer = 0;
 int effectColor = GetColor(0, 0, 0);
 int deathCount = 0;
+bool clearFlag = false;
 bool houseFlag = false;
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
@@ -80,10 +82,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		MoveBadFood();
 		MoveDog();
 		MoveGoodFood();
-		StageMap();
+		if (CheckHitKey(KEY_INPUT_SPACE))
+			timer+=10;
 		if (coffeeCount > 0)
 		{
-			int target = coffeeCount * 50 * stage;
+			int target = coffeeCount * 50;
 			if (target > 255) { target = 255; }
 			if (darkness <= target) { darkness++; }
 			else if (darkness > target) { darkness--; }
@@ -91,16 +94,16 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			DrawBox(0, 0, WIDTH, HEIGHT, 0x000000, TRUE);
 			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 		}
+		StageMap();
 		DrawParameter();
 		if (effectTimer > 0)
 		{
-			DrawTextC(WIDTH/2, 650, effectText, effectColor, 20);
+			DrawTextC(WIDTH / 2, 650, effectText, effectColor, 20);
 			effectTimer--;
 		}
 
 		timer++;
 
-		DrawFormatString(0, 0, 0xffffff, "%d", timer);
 		switch (scene)
 		{
 		case TITLE:
@@ -114,7 +117,25 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				timer = 0;
 				scene = PLAY;
 			}
-			if (stage == 1) {
+			if (clearFlag == true&&stage == 0) {
+				if (timer > FPS * 10 && FPS * 20 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "やぁ！また会ったね", 0xffffff, 20);
+				if (timer > FPS * 20 && FPS * 30 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "このゲームをクリアしてくれてありがとう。", 0xffffff, 20);
+				if (timer > FPS * 30 && FPS * 40 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "え？４ステージ目からいなかったって？", 0xffffff, 20);
+				if (timer > FPS * 40 && FPS * 50 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "シンプルに制作者がめんどくさかっただけじゃないかな？", 0xffffff, 20);
+				if (timer > FPS * 50 && FPS * 60 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "まぁいずれにせよ、このゲームを遊んでくれてありがとう！", 0xffffff, 20);
+				if (timer > FPS * 60 && FPS * 70 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "え？エンドコンテンツはこれだけかって？", 0xffffff, 20);
+				if (timer > FPS * 70 && FPS * 80 >= timer)
+					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "その通りだよ...これから先はほんとに何もないよ", 0xffffff, 20);
+				if (timer > FPS * 90)
+					break;
+			}
+			else if (stage == 1) {
 				if (deathCount == 0) {
 					if (timer > FPS * 10 && FPS * 20 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "あれ？スタートしないの...？", 0xffffff, 20);
@@ -127,7 +148,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (timer > FPS * 50 && FPS * 60 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(自分が黙ればいいのかな...)", 0xffffff, 20);
 				}
-				else if(deathCount==1){
+				else if (deathCount == 1) {
 					if (timer > FPS * 10 && FPS * 15 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "諦めないで！", 0xffffff, 20);
 					if (timer > FPS * 15 && FPS * 20 >= timer)
@@ -139,7 +160,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (timer > FPS * 50 && FPS * 60 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
 				}
-				else if(deathCount==2){
+				else if (deathCount == 2) {
 					if (timer > FPS * 10 && FPS * 15 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "あと少し！頑張って！", 0xffffff, 20);
 					if (timer > FPS * 15 && FPS * 20 >= timer)
@@ -152,7 +173,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
 				}
 			}
-			else if(stage == 2) {
+			else if (stage == 2) {
 				if (deathCount == 0) {
 					if (timer > FPS * 10 && FPS * 15 >= timer)
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage１クリアおめでとう！", 0xffffff, 20);
@@ -190,7 +211,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 						DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "(...)", 0xffffff, 20);
 				}
 			}
-			else if(stage == 3) {
+			else if (stage == 3) {
 				if (timer > FPS * 10 && FPS * 15 >= timer)
 					DrawTextC(WIDTH * 0.5, HEIGHT * 0.75, "stage２やってくれたんだ...ありがとう...", 0xffffff, 20);
 				if (timer > FPS * 15 && FPS * 20 >= timer)
@@ -229,71 +250,127 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			break;
 
 		case PLAY:
-
 			MovePlayer();
+
 			if (distance == STAGE_DISTANCE)
 			{
 				srand(stage);
 				StopSoundMem(jinClear);
-				PlaySoundMem(bgm,DX_PLAYTYPE_LOOP);
+				PlaySoundMem(bgm, DX_PLAYTYPE_LOOP);
 			}
 			if (timer <= 60) {
 				DrawText(0, 0, "STAGE %d", stage, 0xffffff, 60);
 			}
 			if (player.hp > 0) {
-				player.hp = player.hp - 1 - milkCount;
+				player.hp = player.hp - 0.1 - milkCount / 2;
 			}
 			if (reverseTimer > 0) { reverseTimer--; }
 			if (distance > 0 && player.hp > 0) { distance -= player.vx; }
 			if (player.hp > 0) {
-				if (timer % (35 - stage * 5) == 1 && distance > 0)
-				{
-					int x = WIDTH;
-					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
-					int b = GetRand(BADFOOD_KINDNUM - 1);
-					if (b == ONION) { SetBadFood(x, y, -player.vx, 0, ONION, imgBAD[ONION], 2); }
-					if (b == CHOCOLATE) {
-						int vy = 0;
-						if (player.y < y - 50) { vy = -3; }
-						if (player.y > y + 50) { vy = 3; }
-						SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
+				if (stage != 0) {
+					if (timer % 30 == 1 && distance > 0)
+					{
+						int x = WIDTH;
+						int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
+						int b = GetRand(BADFOOD_KINDNUM-(BADFOOD_KINDNUM - stage));
+						if (b == ONION) { SetBadFood(x, y, -player.vx, 0, ONION, imgBAD[ONION], 2); }
+						if (b == CHOCOLATE) {
+							int vy = 0;
+							if (player.y < y - 50) { vy = -3; }
+							if (player.y > y + 50) { vy = 3; }
+							SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
+						}
+						if (b == GRAPE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -1 - player.vx, 1, GRAPE, imgBAD[GRAPE], 2); }
+						if (b == COFFEE) { SetBadFood(x, y, -1 - player.vx, 0, COFFEE, imgBAD[COFFEE], 2); }
+						if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
+						if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
+						if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
+						if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
+						if (b == DOG_FOOD) { SetBadFood(x, y, -1 - player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
 					}
-					if (b == GRAPE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -1 - player.vx, 1, GRAPE, imgBAD[GRAPE], 2); }
-					if (b == COFFEE) { SetBadFood(x, y, -1 - player.vx, 0, COFFEE, imgBAD[COFFEE], 2); }
-					if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
-					if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
-					if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
-					if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
-					if (b == DOG_FOOD) { SetBadFood(x, y, -1 - player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
 				}
-				if (timer % (25 + stage * 5) == 1 && distance > 0)
+				else
 				{
-					int x = WIDTH;
-					int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
-					int g = GetRand(GOODFOOD_KINDNUM - 1);
-					if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
-					if (g == VEGETABLES) {
-						int vy = 0;
-						if (player.y < y - 50) { vy = -5; }
-						if (player.y > y + 50) { vy = 5; }
-						SetGoodFood(x, y, -10, vy, VEGETABLES, imgGOOD[VEGETABLES], 1);  // チョコレートと同じ
+					if (timer % 2 == 1 && distance > 0)
+					{
+						int x = WIDTH;
+						int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
+						int b = GetRand(BADFOOD_KINDNUM);
+						if (b == ONION) { SetBadFood(x, y, -player.vx, 0, ONION, imgBAD[ONION], 2); }
+						if (b == CHOCOLATE) {
+							int vy = 0;
+							if (player.y < y - 50) { vy = -3; }
+							if (player.y > y + 50) { vy = 3; }
+							SetBadFood(x, y, -player.vx * 2, vy, CHOCOLATE, imgBAD[CHOCOLATE], 2);
+						}
+						if (b == GRAPE) { SetBadFood(100 + rand() % (WIDTH - 200), 0, -1 - player.vx, 1, GRAPE, imgBAD[GRAPE], 2); }
+						if (b == COFFEE) { SetBadFood(x, y, -1 - player.vx, 0, COFFEE, imgBAD[COFFEE], 2); }
+						if (b == BEER) { SetBadFood(100 + rand() % (WIDTH - 200), HEIGHT, -player.vx, -10, BEER, imgBAD[BEER], 2); }
+						if (b == AVOCADO) { SetBadFood(x, player.y, -5 - GetRand(5), 0, AVOCADO, imgBAD[AVOCADO], 2); }
+						if (b == RAW_FISH) { SetBadFood(player.x + 500, 0, -player.vx * 2, 10, RAW_FISH, imgBAD[RAW_FISH], 2); }
+						if (b == MILK) { SetBadFood(x, player.y, -1 - timer / 100, 0, MILK, imgBAD[MILK], 2); }
+						if (b == DOG_FOOD) { SetBadFood(x, y, -1 - player.vx / 2, 0, DOG_FOOD, imgBAD[DOG_FOOD], 2); }
 					}
-					if (g == APPLE) {
-						int vy = 0;
-						if (timer % 60 < 30)
-							vy -= 1;
-						else
-							vy += 1;
-						SetGoodFood(x, HEIGHT * 3 / 4, -3, vy, APPLE, imgGOOD[APPLE], 1);
-					} // ぶどうに似ている
-					if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
-					if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
-					if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
-					if (g == CAT_MILK) { SetGoodFood(x, y, -1 - player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+				}
+
+				if (stage != 0) {
+					if (timer % 30 == 1 && distance > 0)
+					{
+						int x = WIDTH;
+						int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
+						int g = GetRand(GOODFOOD_KINDNUM - (GOODFOOD_KINDNUM - stage));
+						if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
+						if (g == VEGETABLES) {
+							int vy = 0;
+							if (player.y < y - 50) { vy = -5; }
+							if (player.y > y + 50) { vy = 5; }
+							SetGoodFood(x, y, -10, vy, VEGETABLES, imgGOOD[VEGETABLES], 1);  // チョコレートと同じ
+						}
+						if (g == APPLE) {
+							int vy = 0;
+							if (timer % 60 < 30)
+								vy -= 1;
+							else
+								vy += 1;
+							SetGoodFood(x, HEIGHT * 3 / 4, -3, vy, APPLE, imgGOOD[APPLE], 1);
+						} // ぶどうに似ている
+						if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
+						if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
+						if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
+						if (g == CAT_MILK) { SetGoodFood(x, y, -1 - player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+					}
+				}
+				else
+				{
+					if (timer % 2 == 1 && distance > 0)
+					{
+						int x = WIDTH;
+						int y = HEIGHT / 2 + rand() % (HEIGHT - 400);
+						int g = GetRand(GOODFOOD_KINDNUM);
+						if (g == COOKED_FISH) { SetGoodFood(player.x + 500, 0, -player.vx * 2, 10, COOKED_FISH, imgGOOD[COOKED_FISH], 1); } // 生の魚と同じ
+						if (g == VEGETABLES) {
+							int vy = 0;
+							if (player.y < y - 50) { vy = -5; }
+							if (player.y > y + 50) { vy = 5; }
+							SetGoodFood(x, y, -10, vy, VEGETABLES, imgGOOD[VEGETABLES], 1);  // チョコレートと同じ
+						}
+						if (g == APPLE) {
+							int vy = 0;
+							if (timer % 60 < 30)
+								vy -= 1;
+							else
+								vy += 1;
+							SetGoodFood(x, HEIGHT * 3 / 4, -3, vy, APPLE, imgGOOD[APPLE], 1);
+						} // ぶどうに似ている
+						if (g == WATERMELON) { SetGoodFood(x, player.y, -player.vx * 1.5, 0, WATERMELON, imgGOOD[WATERMELON], 1); } // アボカドと同じ
+						if (g == BANANA) { SetGoodFood(100 + rand() % (WIDTH - 200), 0, -player.vx, 10, BANANA, imgGOOD[BANANA], 1); } // コーヒーと同じ
+						if (g == CAT_FOOD) { SetGoodFood(x, y, -1 - GetRand(20), 0, CAT_FOOD, imgGOOD[CAT_FOOD], 1); } // ドッグフードと同じ
+						if (g == CAT_MILK) { SetGoodFood(x, y, -1 - player.vx, 0, CAT_MILK, imgGOOD[CAT_MILK], 1); } // 牛乳と同じ
+					}
 				}
 				if (distance < 0 && houseFlag == false)
 				{
-					SetHome(WIDTH + 505, HEIGHT / 4, -player.vx/2, 0, imgHome);
+					SetHome(WIDTH + 505, HEIGHT / 2, -player.vx / 2, 0, imgHome);
 					houseFlag = true;
 				}
 			}
@@ -315,21 +392,24 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			DrawRectGraph(player.x - 47, player.y - 46, 7 * 94, 0, 94, 92, imgCat, TRUE, FALSE);
 			if (timer == FPS * 3)
 			{
-				PlaySoundMem(jinOver,DX_PLAYTYPE_BACK);
+				PlaySoundMem(jinOver, DX_PLAYTYPE_BACK);
 			}
 			else if (timer > FPS * 3) {
 				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "GAME OVER", 0xff0000, 80);
 			}
 			if (timer > FPS * 10 || CheckHitKey(KEY_INPUT_RETURN))
-			{ 
+			{
 				timer = 0;
-				scene = TITLE; 
+				scene = TITLE;
 			}
 			break;
 
 		case CLEAR:
 			DrawRectGraph(player.x - 47, player.y - 46, 7 * 94, 0, 94, 92, imgCat, TRUE, FALSE);
-			if (timer == FPS * 2)
+			if (stage >= 15) {
+				scene = COMPLETE;
+			}
+			else if (timer == FPS * 2)
 			{
 				PlaySoundMem(jinClear, DX_PLAYTYPE_BACK);
 			}
@@ -348,6 +428,27 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				scene = TITLE;
 			}
 			break;
+
+		case COMPLETE:
+			if (timer == FPS * 2)
+			{
+				PlaySoundMem(jinClear, DX_PLAYTYPE_BACK);
+			}
+			else if (timer > FPS * 2)
+			{
+				DrawTextC(WIDTH * 0.5, HEIGHT * 0.3, "CONGRATULATION!!", 0xffff00, 80);
+			}
+			if (timer > FPS * 10)
+			{
+				house.state = 0;
+				houseFlag = false;
+				stage=0;
+				deathCount = 0;
+				distance = STAGE_DISTANCE;
+				clearFlag = true;
+				timer = 0;
+				scene = TITLE;
+			}
 		}
 		ScreenFlip(); // 裏画面を表画面に反映させる
 		WaitTimer(1000 / FPS); // 一定時間待つ
@@ -510,6 +611,16 @@ void MovePlayer(void)
 			if (player.timer >= 7) { player.timer = 0; }
 		}
 	}
+	if (reverseTimer > 0)
+	{
+		if ((timer / 5) % 2 == 0)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				DrawCircle(player.x, player.y, 60 + i, GetColor(255, 255, 0), false);
+			}
+		}
+	}
 }
 
 void SetAttack(void)
@@ -567,6 +678,7 @@ void MoveBadFood(void)
 {
 	for (int i = 0; i < BADFOOD_MAX; i++) {
 		if (BadFood[i].state == 0) { continue; }
+		BadFood[i].vx = -1-player.vx / 2;
 		if (BadFood[i].pattern == GRAPE)
 		{
 			if (BadFood[i].timer % 60 < 30)
@@ -674,7 +786,7 @@ void MoveBadFood(void)
 						break;
 
 					case MILK:
-						player.hp += 150;
+						player.hp = player.hp + 150 + GetRand(150);
 						if (player.hp > PLAYER_HP_MAX)
 							player.hp = PLAYER_HP_MAX;
 						milkCount++;
@@ -690,7 +802,7 @@ void MoveBadFood(void)
 						break;
 
 					case DOG_FOOD:
-						player.hp = player.hp - 1-GetRand(100);
+						player.hp = player.hp - 1;
 						player.vx -= 10;
 						if (player.vx < 0)
 							player.vx = 1;
@@ -738,6 +850,7 @@ void MoveGoodFood(void)
 {
 	for (int i = 0; i < GOODFOOD_MAX; i++) {
 		if (GoodFood[i].state == 0) { continue; }
+		GoodFood[i].vx = -1-player.vx / 2;
 		if (GoodFood[i].pattern == CAT_MILK)
 		{
 			if (GoodFood[i].timer % 60 < 30)
@@ -786,7 +899,7 @@ void MoveGoodFood(void)
 					break;
 
 				case WATERMELON:
-					player.hp += HealByStage(20);
+					player.hp += HealByStage(30);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vy += 1;
@@ -798,10 +911,13 @@ void MoveGoodFood(void)
 					break;
 					
 				case APPLE:
-					player.hp = player.hp +1+HealByStage(GetRand(50));
+					player.hp = player.hp +HealByStage(50+GetRand(50));
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
-					strcpy_s(effectText, "リンゴを食べた！HPがランダムで回復した！");
+					player.vx += 1;
+					if (player.vx > 30)
+						player.vx = 30;
+					strcpy_s(effectText, "リンゴを食べた！縦の移動が速くなり、HPがランダムで回復した！");
 					effectColor = GetColor(0, 255, 0);
 					effectTimer = FPS * 2;
 					break;
@@ -816,7 +932,7 @@ void MoveGoodFood(void)
 					break;
 					
 				case COOKED_FISH:
-					player.hp += HealByStage(20);
+					player.hp += HealByStage(40);
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vx += 2;
@@ -853,7 +969,7 @@ void MoveGoodFood(void)
 					break;
 
 				case CAT_FOOD:
-					player.hp += HealByStage(200);
+					player.hp = PLAYER_HP_MAX;
 					if (player.hp > PLAYER_HP_MAX)
 						player.hp = PLAYER_HP_MAX;
 					player.vx += 5;
@@ -862,7 +978,7 @@ void MoveGoodFood(void)
 					player.vy += 5;
 					if (player.vy > 30)
 						player.vy = 30;
-					strcpy_s(effectText, "キャットフードを食べた！HPが大幅に回復し、縦横の移動が非常にはやくなった！");
+					strcpy_s(effectText, "キャットフードを食べた！HP満タンになり、縦横の移動が非常にはやくなった！");
 					effectColor = GetColor(0,255,  0);
 					effectTimer = FPS * 2;
 					break;
